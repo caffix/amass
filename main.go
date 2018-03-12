@@ -7,7 +7,6 @@ import (
 	"bufio"
 	"flag"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"math/rand"
 	"net/http"
@@ -58,10 +57,11 @@ type outputParams struct {
 
 func main() {
 	var freq int64
-	var wordlist, file string
+	var wordlist, file, domainsfile string
 	var verbose, extra, ip, brute, recursive, whois, list, help bool
 
 	flag.BoolVar(&help, "h", false, "Show the program usage message")
+	flag.StringVar(&domainsfile, "domains", "", "Path to the domains file")
 	flag.BoolVar(&ip, "ip", false, "Show the IP addresses for discovered names")
 	flag.BoolVar(&brute, "brute", false, "Execute brute forcing after searches")
 	flag.BoolVar(&recursive, "norecursive", true, "Turn off recursive brute forcing")
@@ -79,9 +79,14 @@ func main() {
 	}
 
 	domains := flag.Args()
+	if domainsfile != "" {
+		domains = append(domains, getFile(domainsfile)...)
+	}
+
 	if help || len(domains) == 0 {
 		fmt.Println(AsciiArt)
 		fmt.Printf("Usage: %s [options] domain domain2 domain3... (e.g. example.com)\n", path.Base(os.Args[0]))
+		fmt.Printf("Or just send a file in the options with -domains\n")
 		flag.PrintDefaults()
 		return
 	}
@@ -246,33 +251,41 @@ func catchSignals(output, done chan struct{}) {
 
 func getWordlist(path string) []string {
 	var list []string
-	var wordlist io.Reader
 
 	if path != "" {
-		// Open the wordlist
-		file, err := os.Open(path)
-		if err != nil {
-			fmt.Printf("Error opening the wordlist file: %v\n", err)
-			return list
-		}
-		defer file.Close()
-		wordlist = file
+		list = getFile(path)
 	} else {
 		resp, err := http.Get(defaultWordlistURL)
 		if err != nil {
 			return list
 		}
 		defer resp.Body.Close()
-		wordlist = resp.Body
+		scanner := bufio.NewScanner(resp.Body)
+
+		for scanner.Scan() {
+			word := scanner.Text()
+			if word != "" {
+				list = append(list, word)
+			}
+		}
 	}
 
-	scanner := bufio.NewScanner(wordlist)
-	// Once we have used all the words, we are finished
+	return list
+}
+
+func getFile(path string) []string {
+	var list []string
+
+	file, err := os.Open(path)
+	if err != nil {
+		fmt.Printf("Error opening the file: %v\n", err)
+		return list
+	}
+	defer file.Close()
+	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
-		// Get the next word in the list
 		word := scanner.Text()
 		if word != "" {
-			// Add the word to the list
 			list = append(list, word)
 		}
 	}

@@ -17,7 +17,7 @@ If your operating environment supports [Snap](https://docs.snapcraft.io/core/ins
 ```
 $ sudo snap install amass
 ```
- 
+
 
 #### From Source
 
@@ -36,6 +36,21 @@ At this point, the amass binary should be in *$GOPATH/bin*.
 $ ls $GOPATH/src/github.com/caffix/amass/wordlists/
 ```
 
+#### Development Workflow
+
+From the root of the repository, run:
+
+```
+# Install the pinned dependencies as deescribed in Gopkg.toml
+dep ensure -vendor-only
+
+## Compile amass in the source tree
+mkdir -p build
+go build -o build/amass .
+
+# Install a build of amass
+go install .
+```
 
 ## Using the Tool
 

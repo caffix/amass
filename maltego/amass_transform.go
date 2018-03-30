@@ -51,7 +51,7 @@ func main() {
 	})
 	config.AddDomains([]string{domain})
 	// Begin the enumeration process
-	amass.StartAmass(config)
+	amass.StartEnumeration(config)
 	fmt.Println(trx.ReturnOutput())
 }
 

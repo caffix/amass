@@ -143,7 +143,7 @@ $ amass -blf data/blacklist.txt -d example.com
 
 The amass feature that performs alterations on discovered names and attempt resolution can be disabled:
 ```
-$ amass -noalts -d example.com
+$ amass -no-alts -d example.com
 ```
 
 

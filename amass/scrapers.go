@@ -103,8 +103,17 @@ loop:
 		case req := <-ss.responses:
 			req.Name = strings.TrimSpace(trim252F(req.Name))
 
-			if !ss.duplicate(req.Name) {
-				ss.Config().dns.SendRequest(req)
+			if ss.Config().dns != nil {
+				if !ss.duplicate(req.Name) {
+					ss.Config().dns.SendRequest(req)
+				}
+			} else {
+				ss.Config().Output <- &AmassOutput{
+					Name:   req.Name,
+					Domain: req.Domain,
+					Tag:    req.Tag,
+					Source: req.Source,
+				}
 			}
 		case <-ss.Quit():
 			break loop
